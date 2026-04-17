@@ -14,12 +14,12 @@ st.set_page_config(
 # =========================
 # Load Models
 # =========================
-model = pickle.load(open("rf_model.pkl", "rb"))
-feature_scaler = pickle.load(open("feature_scaler.pkl", "rb"))
-label_encoder = pickle.load(open("label_encoder.pkl", "rb"))
+model = pickle.load(open("random_forest_salary.pkl", "rb"))
+feature_scaler = pickle.load(open("scaler_feature.pkl", "rb"))
+label_encoder = pickle.load(open("label_feature.pkl", "rb"))
 
 try:
-    target_scaler = pickle.load(open("target_scaler.pkl", "rb"))
+    target_scaler = pickle.load(open("scaler_target.pkl", "rb"))
 except:
     target_scaler = None
 
