@@ -112,12 +112,12 @@ with col2:
         input_data = np.array([[age, gender_encoded, education, experience]])
 
         # SCALE INPUT (MOST IMPORTANT STEP)
-        input_scaled = scaler.fit_transform(input_data)
+        input_scaled = scaler.transform(input_data)
 
         # Predict
         prediction = model.predict(input_scaled)
         prediction = target_scaler.inverse_transform(prediction.reshape(-1, 1))
-        salary = int(prediction[0])
+        salary = int(prediction[0][0])
 
         # Display nicely
         st.markdown(f"""
