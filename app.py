@@ -1,26 +1,36 @@
 import streamlit as st
 import numpy as np
 import pickle
-import os
 from pathlib import Path
+
 # =========================
 # Page Config
 # =========================
 st.set_page_config(
-    page_title="Employee Prediction System",
+    page_title="Employee Salary Prediction System",
     page_icon="📊",
     layout="wide"
 )
 
 # =========================
-# Load Models
+# Load Models Safely
 # =========================
-
 BASE_DIR = Path(__file__).resolve().parent
 
-model = pickle.load(open(BASE_DIR / "random_forest_salary.pkl", "rb"))
-scaler = pickle.load(open(BASE_DIR / "scaler_features.pkl", "rb"))
-target_scaler = pickle.load(open(BASE_DIR / "scaler_target.pkl", "rb"))
+try:
+    with open(BASE_DIR / "random_forest_salary.pkl", "rb") as f:
+        model = pickle.load(f)
+
+    with open(BASE_DIR / "scaler_features.pkl", "rb") as f:
+        scaler = pickle.load(f)
+
+    with open(BASE_DIR / "scaler_target.pkl", "rb") as f:
+        target_scaler = pickle.load(f)
+
+except Exception as e:
+    st.error(f"❌ Error loading model files: {e}")
+    st.stop()
+
 # =========================
 # Custom UI Styling
 # =========================
@@ -60,7 +70,7 @@ st.markdown("""
 # Header
 # =========================
 st.markdown('<p class="title">💰 Salary Prediction System</p>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">Machine Learning based prediction</p>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">Machine Learning based prediction using Random Forest</p>', unsafe_allow_html=True)
 
 st.divider()
 
@@ -105,36 +115,44 @@ with col2:
 
     if st.button("🚀 Predict Salary"):
 
-        # Encode gender (same as training)
-        gender_encoded = 1 if gender == "Male" else 0
+        try:
+            # Encode gender (must match training)
+            gender_encoded = 1 if gender == "Male" else 0
 
-        # Create input (RAW VALUES)
-        input_data = np.array([[age, gender_encoded, education, experience]])
+            # Create input array
+            input_data = np.array([[age, gender_encoded, education, experience]])
 
-        # SCALE INPUT (MOST IMPORTANT STEP)
-        input_scaled = scaler.fit_transform(input_data)
+            # ✅ Correct scaling (NO fit_transform)
+            input_scaled = scaler.transform(input_data)
 
-        # Predict
-        prediction = model.predict(input_scaled)
-        prediction = target_scaler.inverse_transform(prediction.reshape(-1, 1))
-        salary = int(prediction[0][0])
+            # Predict
+            prediction = model.predict(input_scaled)
 
-        # Display nicely
-        st.markdown(f"""
-        <div class="result">
-            <h1 style="color:#00C9A7;">₹ {salary:,}</h1>
-            <p>Predicted Salary</p>
-        </div>
-        """, unsafe_allow_html=True)
+            # Inverse transform target
+            prediction = target_scaler.inverse_transform(prediction.reshape(-1, 1))
 
-        # Extra Info
-        st.info(f"""
-        📌 Input Summary:
-        - Age: {age}
-        - Gender: {gender}
-        - Education: {education_label}
-        - Experience: {experience} years
-        """)
+            # Extract scalar value
+            salary = int(prediction[0][0])
+
+            # Display result
+            st.markdown(f"""
+            <div class="result">
+                <h1 style="color:#00C9A7;">₹ {salary:,}</h1>
+                <p>Predicted Annual Salary</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Extra Info
+            st.info(f"""
+            📌 Input Summary:
+            - Age: {age}
+            - Gender: {gender}
+            - Education: {education_label}
+            - Experience: {experience} years
+            """)
+
+        except Exception as e:
+            st.error(f"❌ Prediction failed: {e}")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -142,4 +160,4 @@ with col2:
 # Footer
 # =========================
 st.divider()
-st.caption("Built with ❤️ using Streamlit")
+st.caption("Built with ❤️ using Streamlit | Model: Random Forest Regressor")
