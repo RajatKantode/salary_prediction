@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import pickle
 from pathlib import Path
+from sklearn.preprocessing import StandardScaler
 
 # =========================
 # Page Config
@@ -13,16 +14,13 @@ st.set_page_config(
 )
 
 # =========================
-# Load Models Safely
+# Load Models
 # =========================
 BASE_DIR = Path(__file__).resolve().parent
 
 try:
     with open(BASE_DIR / "random_forest_salary.pkl", "rb") as f:
         model = pickle.load(f)
-
-    with open(BASE_DIR / "scaler_features.pkl", "rb") as f:
-        scaler = pickle.load(f)
 
     with open(BASE_DIR / "scaler_target.pkl", "rb") as f:
         target_scaler = pickle.load(f)
@@ -70,7 +68,7 @@ st.markdown("""
 # Header
 # =========================
 st.markdown('<p class="title">💰 Salary Prediction System</p>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">Machine Learning based prediction using Random Forest</p>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">Machine Learning based prediction</p>', unsafe_allow_html=True)
 
 st.divider()
 
@@ -116,22 +114,27 @@ with col2:
     if st.button("🚀 Predict Salary"):
 
         try:
-            # Encode gender (must match training)
+            # Encode gender
             gender_encoded = 1 if gender == "Male" else 0
 
-            # Create input array
-            input_data = np.array([[age, gender_encoded, education, experience]])
+            # Raw input array
+            input_array = np.array([[age, gender_encoded, education, experience]])
 
-            # ✅ Correct scaling (NO fit_transform)
-            input_scaled = scaler.transform(input_data)
+            # ⚠️ Column-wise scaling (same as your training)
+            input_scaled = np.zeros_like(input_array, dtype=float)
+
+            for i in range(input_array.shape[1]):
+                sc = StandardScaler()
+                input_scaled[:, i] = sc.fit_transform(
+                    input_array[:, i].reshape(-1, 1)
+                ).flatten()
 
             # Predict
             prediction = model.predict(input_scaled)
 
-            # Inverse transform target
+            # Inverse scaling of target
             prediction = target_scaler.inverse_transform(prediction.reshape(-1, 1))
 
-            # Extract scalar value
             salary = int(prediction[0][0])
 
             # Display result
@@ -142,7 +145,7 @@ with col2:
             </div>
             """, unsafe_allow_html=True)
 
-            # Extra Info
+            # Input Summary
             st.info(f"""
             📌 Input Summary:
             - Age: {age}
@@ -160,4 +163,4 @@ with col2:
 # Footer
 # =========================
 st.divider()
-st.caption("Built with ❤️ using Streamlit | Model: Random Forest Regressor")
+st.caption("Built with ❤️ using Streamlit")
