@@ -19,71 +19,77 @@ st.set_page_config(
 BASE_DIR = Path(__file__).resolve().parent
 
 model = pickle.load(open(BASE_DIR / "random_forest_salary.pkl", "rb"))
-feature_scaler = pickle.load(open(BASE_DIR / "scaler_features.pkl", "rb"))
-label_encoder = pickle.load(open(BASE_DIR / "label_feature.pkl", "rb"))
-
-try:
-    target_scaler = pickle.load(open(BASE_DIR / "scaler_target.pkl", "rb"))
-except Exception:
-    target_scaler = None
-
+scaler = pickle.load(open(BASE_DIR / "scaler_features.pkl", "rb"))
 # =========================
-# Custom CSS Styling
+# Custom UI Styling
 # =========================
 st.markdown("""
-    <style>
-        .main {
-            background-color: #0E1117;
-        }
-        .title {
-            font-size: 40px;
-            font-weight: bold;
-            color: #00C9A7;
-        }
-        .card {
-            padding: 20px;
-            border-radius: 15px;
-            background-color: #1E1E2F;
-            box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
-        }
-        .stButton>button {
-            width: 100%;
-            border-radius: 10px;
-            background-color: #00C9A7;
-            color: white;
-            font-size: 18px;
-        }
-    </style>
+<style>
+.title {
+    font-size: 42px;
+    font-weight: bold;
+    color: #00C9A7;
+}
+.subtitle {
+    color: #BBBBBB;
+}
+.card {
+    padding: 25px;
+    border-radius: 15px;
+    background-color: #1E1E2F;
+    box-shadow: 0px 6px 18px rgba(0,0,0,0.3);
+}
+.result {
+    padding: 25px;
+    border-radius: 15px;
+    background-color: #111827;
+    text-align: center;
+}
+.stButton>button {
+    width: 100%;
+    border-radius: 12px;
+    background-color: #00C9A7;
+    color: white;
+    font-size: 18px;
+}
+</style>
 """, unsafe_allow_html=True)
 
 # =========================
 # Header
 # =========================
-st.markdown('<p class="title">📊 Employee Prediction System</p>', unsafe_allow_html=True)
-st.write("Predict outcomes based on employee details using Machine Learning")
+st.markdown('<p class="title">💰 Salary Prediction System</p>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">Machine Learning based prediction</p>', unsafe_allow_html=True)
 
 st.divider()
 
 # =========================
-# Layout (2 Columns)
+# Layout
 # =========================
-col1, col2 = st.columns([1, 1])
+col1, col2 = st.columns(2)
 
 # =========================
 # INPUT SECTION
 # =========================
 with col1:
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.subheader("📝 Input Details")
+    st.subheader("📝 Enter Details")
 
     age = st.slider("Age", 18, 65, 25)
 
     gender = st.radio("Gender", ["Male", "Female"], horizontal=True)
 
-    education = st.selectbox(
-        "Education Level",
-        ["0 - High School", "1 - Diploma", "2 - Bachelor", "3 - Master", "4 - PhD", "5 - Other"]
-    )
+    education_map = {
+        "High School": 0,
+        "Diploma": 1,
+        "Bachelor": 2,
+        "Master": 3,
+        "PhD": 4,
+        "Other": 5
+    }
+
+    education_label = st.selectbox("Education Level", list(education_map.keys()))
+    education = education_map[education_label]
 
     experience = st.slider("Years of Experience", 0, 40, 2)
 
@@ -94,39 +100,39 @@ with col1:
 # =========================
 with col2:
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.subheader("📈 Prediction Result")
+    st.subheader("📊 Prediction")
 
-    if st.button("🔍 Predict"):
-        # Encode inputs
+    if st.button("🚀 Predict Salary"):
+
+        # Encode gender (same as training)
         gender_encoded = 1 if gender == "Male" else 0
-        education_encoded = int(education.split(" - ")[0])
 
-        input_data = np.array([[age, gender_encoded, education_encoded, experience]])
+        # Create input (RAW VALUES)
+        input_data = np.array([[age, gender_encoded, education, experience]])
 
-        # Scale
-        input_scaled = feature_scaler.transform(input_data)
+        # SCALE INPUT (MOST IMPORTANT STEP)
+        input_scaled = scaler.transform(input_data)
 
         # Predict
         prediction = model.predict(input_scaled)
+        salary = int(prediction[0])
 
-        # Decode label if needed
-        try:
-            prediction = label_encoder.inverse_transform(prediction)
-        except:
-            pass
+        # Display nicely
+        st.markdown(f"""
+        <div class="result">
+            <h1 style="color:#00C9A7;">₹ {salary:,}</h1>
+            <p>Predicted Salary</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-        # Inverse scale if regression
-        if target_scaler:
-            prediction = target_scaler.inverse_transform(prediction.reshape(-1, 1))
-
-        # Display result
-        st.success(f"✅ Prediction: {prediction[0]}")
-
-        # Optional probability (if classification)
-        if hasattr(model, "predict_proba"):
-            probs = model.predict_proba(input_scaled)[0]
-            st.write("### 📊 Confidence Scores")
-            st.bar_chart(probs)
+        # Extra Info
+        st.info(f"""
+        📌 Input Summary:
+        - Age: {age}
+        - Gender: {gender}
+        - Education: {education_label}
+        - Experience: {experience} years
+        """)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -134,4 +140,4 @@ with col2:
 # Footer
 # =========================
 st.divider()
-st.caption("Built with ❤️ using Streamlit | Machine Learning Project")
+st.caption("Built with ❤️ using Streamlit")
