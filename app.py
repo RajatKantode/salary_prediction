@@ -1,7 +1,8 @@
 import streamlit as st
 import numpy as np
 import pickle
-
+import os
+from pathlib import Path
 # =========================
 # Page Config
 # =========================
@@ -14,13 +15,16 @@ st.set_page_config(
 # =========================
 # Load Models
 # =========================
-model = pickle.load(open("random_forest_salary.pkl", "rb"))
-feature_scaler = pickle.load(open("scaler_feature.pkl", "rb"))
-label_encoder = pickle.load(open("label_feature.pkl", "rb"))
+
+BASE_DIR = Path(__file__).resolve().parent
+
+model = pickle.load(open(BASE_DIR / "random_forest_salary.pkl", "rb"))
+feature_scaler = pickle.load(open(BASE_DIR / "scaler_features.pkl", "rb"))
+label_encoder = pickle.load(open(BASE_DIR / "label_feature.pkl", "rb"))
 
 try:
-    target_scaler = pickle.load(open("scaler_target.pkl", "rb"))
-except:
+    target_scaler = pickle.load(open(BASE_DIR / "scaler_target.pkl", "rb"))
+except Exception:
     target_scaler = None
 
 # =========================
