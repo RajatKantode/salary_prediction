@@ -111,7 +111,7 @@ with col2:
         input_data = np.array([[age, gender_encoded, education, experience]])
 
         # SCALE INPUT (MOST IMPORTANT STEP)
-        input_scaled = scaler.transform(input_data)
+        input_scaled = scaler.fit_transform(input_data)
 
         # Predict
         prediction = model.predict(input_scaled)
