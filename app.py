@@ -20,6 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent
 
 model = pickle.load(open(BASE_DIR / "random_forest_salary.pkl", "rb"))
 scaler = pickle.load(open(BASE_DIR / "scaler_features.pkl", "rb"))
+target_scaler = pickle.load(open(BASE_DIR / "scaler_target.pkl", "rb"))
 # =========================
 # Custom UI Styling
 # =========================
@@ -115,6 +116,7 @@ with col2:
 
         # Predict
         prediction = model.predict(input_scaled)
+        prediction = target_scaler.inverse_transform(prediction.reshape(-1, 1))
         salary = int(prediction[0])
 
         # Display nicely
