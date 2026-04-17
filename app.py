@@ -135,7 +135,7 @@ with col2:
             # Inverse scaling of target
             prediction = target_scaler.inverse_transform(prediction.reshape(-1, 1))
 
-            salary = int(prediction[0][0])
+            salary = int(prediction[0])
 
             # Display result
             st.markdown(f"""
